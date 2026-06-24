@@ -316,16 +316,9 @@ Continue the selected option.
         <div className="navbar-container">
 
           <a
-            href="/"
-            className="logo-link"
-            onClick={(e) =>
-              handleLinkClick(
-                e,
-                "/",
-                "_self"
-              )
-            }
-          >
+  href="#/"
+  className="logo-link"
+>
             <img
               src={ICCTlogo}
               alt="ICCT Logo"
@@ -508,3 +501,5 @@ const App = () => (
     <AppContent />
   </Router>
 );
+
+export default App;
