@@ -351,17 +351,21 @@ Continue the selected option.
             }`}
           >
             <li>
-              <a
-                href="/"
-              >
-                Home
+              <a href="#/">
+           Home
               </a>
             </li>
 
             <li>
               <a
                 href="/about"
-              
+                onClick={(e) =>
+                  handleLinkClick(
+                    e,
+                    "/about",
+                    "_self"
+                  )
+                }
               >
                 About
               </a>
