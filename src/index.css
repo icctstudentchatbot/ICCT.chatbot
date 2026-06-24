@@ -35,7 +35,7 @@ body {
 
 /* NAVBAR */
 .navbar {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -509,8 +509,6 @@ body {
   .navbar-logo {
     width: 58px;
     height: 58px;
-    position: static !important;
-    z-index: 1;
   }
 
   .hero-section {
