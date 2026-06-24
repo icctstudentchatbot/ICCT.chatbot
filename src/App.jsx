@@ -353,13 +353,6 @@ Continue the selected option.
             <li>
               <a
                 href="/"
-                onClick={(e) =>
-                  handleLinkClick(
-                    e,
-                    "/",
-                    "_self"
-                  )
-                }
               >
                 Home
               </a>
@@ -368,13 +361,7 @@ Continue the selected option.
             <li>
               <a
                 href="/about"
-                onClick={(e) =>
-                  handleLinkClick(
-                    e,
-                    "/about",
-                    "_self"
-                  )
-                }
+              
               >
                 About
               </a>
