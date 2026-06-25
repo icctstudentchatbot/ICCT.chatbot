@@ -377,7 +377,7 @@ Continue the selected option.
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                B-board
+                Blackboard
               </a>
             </li>
 
@@ -387,7 +387,7 @@ Continue the selected option.
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Portal
+                ICCT Portal
               </a>
             </li>
           </ul>
