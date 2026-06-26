@@ -79,6 +79,10 @@ const AppContent = () => {
   const [chatHistory, setChatHistory] =
     useState([]);
 
+  // ===== ANNOUNCEMENTS STATE - ADDED FROM OLD VERSION =====
+  const [announcements, setAnnouncements] =
+    useState([]);
+
   const chatBodyRef = useRef(null);
 
   const navigate = useNavigate();
@@ -90,6 +94,41 @@ const AppContent = () => {
       behavior: "smooth",
     });
   }, [chatHistory]);
+
+  // ===== LOAD ANNOUNCEMENTS - ADDED FROM OLD VERSION =====
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:3001/announcements"
+        );
+
+        const data = await res.json();
+
+        setAnnouncements(data);
+
+        console.log(
+          "Announcements loaded:",
+          data
+        );
+      } catch (error) {
+        console.log(
+          "Announcement error:",
+          error
+        );
+      }
+    };
+
+    loadAnnouncements();
+
+    const interval = setInterval(
+      loadAnnouncements,
+      60000
+    );
+
+    return () =>
+      clearInterval(interval);
+  }, []);
 
   // Internal link transitions
   const handleLinkClick = (
@@ -113,68 +152,100 @@ const AppContent = () => {
       setPageLeaving(false);
     }, 500);
   };
-// ===== AI RESPONSE =====
-const generateBotResponse = async (
-  updatedHistory
-) => {
 
-  if (!updatedHistory.length) return;
+  // ===== AI RESPONSE =====
+  const generateBotResponse = async (
+    updatedHistory
+  ) => {
 
+    if (!updatedHistory.length) return;
 
-  try {
+    try {
 
-    // Thinking bubble
-    setChatHistory((prev) => {
+      // Thinking bubble
+      setChatHistory((prev) => {
 
-      if (
-        prev.some(
-          (msg) =>
-            msg.text === "Thinking..."
-        )
-      ) {
-        return prev;
-      }
+        if (
+          prev.some(
+            (msg) =>
+              msg.text === "Thinking..."
+          )
+        ) {
+          return prev;
+        }
 
+        return [
+          ...prev,
+          {
+            role: "model",
+            text: "Thinking...",
+          },
+        ];
 
-      return [
-        ...prev,
-        {
-          role: "model",
-          text: "Thinking...",
-        },
-      ];
+      });
 
-    });
+      // Create conversation memory
+      const conversation =
+        updatedHistory
+          .filter(
+            (msg) =>
+              msg.text !== "Thinking..."
+          )
+          .map((msg) => {
 
-
-
-    // Create conversation memory
-    const conversation =
-      updatedHistory
-        .filter(
-          (msg) =>
-            msg.text !== "Thinking..."
-        )
-        .map((msg) => {
-
-          return `${
-            msg.role === "user"
-              ? "Student"
-              : "Assistant"
-          }:
+            return `${
+              msg.role === "user"
+                ? "Student"
+                : "Assistant"
+            }:
 
 ${msg.text}`;
 
-        })
-        .join("\n\n");
+          })
+          .join("\n\n");
 
+      // ===== CREATE ANNOUNCEMENT CONTEXT - ADDED FROM OLD VERSION =====
+      const announcementText =
+        announcements.length > 0
+          ? announcements
+              .map((post, index) => `
+Announcement ${index + 1}
 
+Title:
+${post.title || "ICCT Announcement"}
 
+Category:
+${post.category || "General"}
 
-    // AI CALL
-    const response =
-      await puter.ai.chat(
+Date:
+${post.date}
+
+Content:
+${post.content}
+
+Images:
+${
+  post.images && post.images.length > 0
+    ? post.images.join("\n")
+    : "No images"
+}
+
+----------------------------------------
+`)
+              .join("\n")
+          : "No announcements found in the database.";
+
+      // AI CALL
+      const response =
+        await puter.ai.chat(
 `${systemPrompt}
+
+
+================================
+LATEST ICCT ANNOUNCEMENTS
+================================
+
+${announcementText}
 
 
 ================================
@@ -193,110 +264,99 @@ Do not repeat the menu.
 
 Continue the selected option.
 `,
-        {
-          model: "gpt-4o-mini",
-        }
+          {
+            model: "gpt-4o-mini",
+          }
+        );
+
+      console.log(
+        "FULL RESPONSE:",
+        response
       );
 
+      // Parse response
+      let botReply = "";
 
+      if (typeof response === "string") {
 
-    console.log(
-      "FULL RESPONSE:",
-      response
-    );
+        botReply = response;
 
-
-
-    // Parse response
-    let botReply = "";
-
-
-
-    if (typeof response === "string") {
-
-      botReply = response;
-
-    }
-
-    else if (
-      response?.message?.content
-    ) {
-
-      botReply =
-        response.message.content;
-
-    }
-
-    else if (
-      response?.content
-    ) {
-
-      botReply =
-        response.content;
-
-    }
-
-    else if (
-      response?.text
-    ) {
-
-      botReply =
-        response.text;
-
-    }
-
-    else {
-
-      botReply =
-        "No response.";
-
-    }
-
-
-
-    // Replace thinking
-    setChatHistory((prev) => [
-
-      ...prev.filter(
-        (msg) =>
-          msg.text !== "Thinking..."
-      ),
-
-      {
-        role: "model",
-        text: botReply,
       }
 
-    ]);
+      else if (
+        response?.message?.content
+      ) {
 
+        botReply =
+          response.message.content;
 
-
-  } catch (error) {
-
-    console.error(
-      "Puter AI error:",
-      error
-    );
-
-
-    setChatHistory((prev) => [
-
-      ...prev.filter(
-        (msg) =>
-          msg.text !== "Thinking..."
-      ),
-
-      {
-        role: "model",
-        text:
-          "Sorry, something went wrong.",
       }
 
-    ]);
+      else if (
+        response?.content
+      ) {
 
-  }
+        botReply =
+          response.content;
 
-};
+      }
+
+      else if (
+        response?.text
+      ) {
+
+        botReply =
+          response.text;
+
+      }
+
+      else {
+
+        botReply =
+          "No response.";
+
+      }
+
+      // Replace thinking
+      setChatHistory((prev) => [
+
+        ...prev.filter(
+          (msg) =>
+            msg.text !== "Thinking..."
+        ),
+
+        {
+          role: "model",
+          text: botReply,
+        }
+
+      ]);
+
+    } catch (error) {
+
+      console.error(
+        "Puter AI error:",
+        error
+      );
+
+      setChatHistory((prev) => [
+
+        ...prev.filter(
+          (msg) =>
+            msg.text !== "Thinking..."
+        ),
+
+        {
+          role: "model",
+          text:
+            "Error: " + error.message,
+        }
+
+      ]);
+
+    }
+
+  };
 
   return (
     <div
@@ -316,9 +376,9 @@ Continue the selected option.
         <div className="navbar-container">
 
           <a
-  href="#/"
-  className="logo-link"
->
+            href="#/"
+            className="logo-link"
+          >
             <img
               src={ICCTlogo}
               alt="ICCT Logo"
@@ -352,7 +412,7 @@ Continue the selected option.
           >
             <li>
               <a href="#/">
-           Home
+                Home
               </a>
             </li>
 
