@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 const ChatForm = ({
   chatHistory,
@@ -6,21 +6,20 @@ const ChatForm = ({
   generateBotResponse,
 }) => {
   const inputRef = useRef();
-  const [image, setImage] = useState(null);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
-    const userMessage = inputRef.current.value.trim();
+    const userMessage =
+      inputRef.current.value.trim();
 
-    if (!userMessage && !image) return;
+    if (!userMessage) return;
 
     const newHistory = [
       ...chatHistory,
       {
         role: "user",
-        text: userMessage || "",
-        image: image, // ✅ now properly stored
+        text: userMessage,
       },
     ];
 
@@ -28,12 +27,13 @@ const ChatForm = ({
     generateBotResponse(newHistory);
 
     inputRef.current.value = "";
-    setImage(null);
   };
 
   return (
-    <form className="chat-form" onSubmit={handleFormSubmit}>
-      {/* TEXT INPUT */}
+    <form
+      className="chat-form"
+      onSubmit={handleFormSubmit}
+    >
       <input
         ref={inputRef}
         type="text"
@@ -41,21 +41,10 @@ const ChatForm = ({
         className="message-input"
       />
 
-      {/* IMAGE INPUT (THIS WAS MISSING!) */}
-      <input
-        type="file"
-        accept="image/*"
-        id="imageUpload"
-        style={{ display: "none" }}
-        onChange={(e) => setImage(e.target.files[0])}
-      />
-
-      <label htmlFor="imageUpload" className="material-symbols-outlined">
-        image
-      </label>
-
-      {/* SUBMIT */}
-      <button type="submit" className="material-symbols-outlined">
+      <button
+        type="submit"
+        className="material-symbols-outlined"
+      >
         keyboard_arrow_up
       </button>
     </form>
