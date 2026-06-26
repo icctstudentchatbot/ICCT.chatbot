@@ -1,4 +1,4 @@
-ito namn ung sa prompt ko // prompt.js
+// prompt.js
 
 const systemPrompt = `
 
