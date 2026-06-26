@@ -1,7 +1,7 @@
 import ICCTlogo from "./assets/ICCTlogo.png";
 import { useState, useRef, useEffect } from "react";
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   useNavigate,
@@ -78,6 +78,10 @@ const AppContent = () => {
 
   const [chatHistory, setChatHistory] =
     useState([]);
+    
+    const [announcements, setAnnouncements] =
+    useState([]);
+
 
   const chatBodyRef = useRef(null);
 
@@ -90,6 +94,50 @@ const AppContent = () => {
       behavior: "smooth",
     });
   }, [chatHistory]);
+  useEffect(() => {
+
+  const loadAnnouncements = async () => {
+
+    try {
+
+      const res = await fetch(
+        "http://localhost:3001/announcements"
+      );
+
+      const data = await res.json();
+
+      setAnnouncements(data);
+console.log(
+"Announcements loaded:",
+data
+);
+
+    } catch (error) {
+
+      console.log(
+        "Announcement error:",
+        error
+      );
+
+    }
+
+  };
+
+
+  loadAnnouncements();
+
+
+  const interval = setInterval(
+    loadAnnouncements,
+    60000
+  );
+
+
+  return () =>
+    clearInterval(interval);
+
+
+}, []);
 
   // Internal link transitions
   const handleLinkClick = (
@@ -171,10 +219,43 @@ ${msg.text}`;
 
 
 
-    // AI CALL
-    const response =
-      await puter.ai.chat(
+// Create announcement context
+
+const announcementText =
+  announcements.announcements &&
+  announcements.announcements.length > 0
+?
+announcements.announcements
+.map(
+(post,index)=>
+`
+Announcement ${index+1}
+
+Date:
+${post.date}
+
+Details:
+${post.content}
+`
+)
+.join("\n\n")
+:
+"No announcements found";
+
+
+
+// AI CALL
+
+const response =
+await puter.ai.chat(
 `${systemPrompt}
+
+
+================================
+LATEST ICCT ANNOUNCEMENTS
+================================
+
+${announcementText}
 
 
 ================================
@@ -193,10 +274,10 @@ Do not repeat the menu.
 
 Continue the selected option.
 `,
-        {
-          model: "gpt-4o-mini",
-        }
-      );
+{
+ model:"gpt-4o-mini",
+}
+);
 
 
 
@@ -273,28 +354,27 @@ Continue the selected option.
 
   } catch (error) {
 
-    console.error(
-      "Puter AI error:",
-      error
-    );
+console.error(
+  "Puter AI error:",
+  error
+);
 
 
-    setChatHistory((prev) => [
+setChatHistory((prev)=>[
 
-      ...prev.filter(
-        (msg) =>
-          msg.text !== "Thinking..."
-      ),
+...prev.filter(
+(msg)=>msg.text !== "Thinking..."
+),
 
-      {
-        role: "model",
-        text:
-          "Sorry, something went wrong.",
-      }
+{
+role:"model",
+text:
+"Error: " + error.message,
+}
 
-    ]);
+]);
 
-  }
+}
 
 };
 
@@ -316,9 +396,16 @@ Continue the selected option.
         <div className="navbar-container">
 
           <a
-  href="#/"
-  className="logo-link"
->
+            href="/"
+            className="logo-link"
+            onClick={(e) =>
+              handleLinkClick(
+                e,
+                "/",
+                "_self"
+              )
+            }
+          >
             <img
               src={ICCTlogo}
               alt="ICCT Logo"
@@ -351,8 +438,17 @@ Continue the selected option.
             }`}
           >
             <li>
-              <a href="#/">
-           Home
+              <a
+                href="/"
+                onClick={(e) =>
+                  handleLinkClick(
+                    e,
+                    "/",
+                    "_self"
+                  )
+                }
+              >
+                Home
               </a>
             </li>
 
